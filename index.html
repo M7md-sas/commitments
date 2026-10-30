@@ -1,0 +1,231 @@
+<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>التزاماتي</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: one narrow column — month tabs, budget summary, item list, actions */
+:root{
+  --bg:#f3f4f8;--surface:#ffffff;--inset:#f7f8fb;--line:#e1e4ec;
+  --fg:#171a21;--muted:#646c80;--accent:#4f46e5;--on-accent:#ffffff;
+  --ok:#16a34a;--danger:#dc2626;--danger-bg:#fdecec;
+  --font:system-ui,"Segoe UI",Tahoma,Arial,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1115;--surface:#171a21;--inset:#0e1117;--line:#262b36;
+  --fg:#e8ecf3;--muted:#8b93a7;--accent:#6366f1;--on-accent:#ffffff;
+  --ok:#22c55e;--danger:#ef4444;--danger-bg:#3a1f1f;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1115;--surface:#171a21;--inset:#0e1117;--line:#262b36;
+  --fg:#e8ecf3;--muted:#8b93a7;--accent:#6366f1;--on-accent:#ffffff;
+  --ok:#22c55e;--danger:#ef4444;--danger-bg:#3a1f1f;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);line-height:1.6;
+  padding-block:16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+h1{font-size:22px;margin:0;text-wrap:balance}
+.sub{color:var(--muted);font-size:13px;margin-top:2px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px}
+.row{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px dashed var(--line)}
+.row:last-child{border-bottom:0}
+.chk{width:26px;height:26px;flex:0 0 26px;border-radius:7px;border:2px solid var(--line);background:transparent;cursor:pointer;color:var(--on-accent);font-size:14px;display:flex;align-items:center;justify-content:center;padding:0}
+.chk.on{background:var(--ok);border-color:var(--ok)}
+.name{flex:1;min-width:0;font-size:15px;background:transparent;border:0;border-bottom:1px solid transparent;color:var(--fg);padding:4px 0;font-family:inherit}
+.name::placeholder,.amt::placeholder,.budget::placeholder{color:var(--muted);opacity:.7}
+.name:focus{outline:0;border-bottom-color:var(--accent)}
+.done .name{text-decoration:line-through;color:var(--muted)}
+.amt{width:92px;flex:0 0 92px;padding:6px 8px;background:var(--inset);border:1px solid var(--line);border-radius:8px;color:var(--fg);text-align:left;font-size:15px;font-family:inherit;font-variant-numeric:tabular-nums}
+.del{flex:0 0 auto;min-width:32px;height:32px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--muted);font-size:13px;cursor:pointer;padding:0 6px;font-family:inherit}
+.del.arm{border-color:var(--danger);background:var(--danger-bg);color:var(--danger)}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.stat{background:var(--inset);border:1px solid var(--line);border-radius:12px;padding:12px}
+.lbl{font-size:12px;color:var(--muted)}
+.val{font-size:21px;font-weight:700;margin-top:2px;font-variant-numeric:tabular-nums}
+.val.neg{color:var(--danger)}
+.bar{height:10px;background:var(--inset);border-radius:99px;overflow:hidden;border:1px solid var(--line);margin-top:12px}
+.bar>i{display:block;height:100%;background:var(--accent);transition:width .2s}
+.field{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
+.budget{width:100%;padding:10px;background:var(--inset);border:1px solid var(--line);border-radius:10px;color:var(--fg);font-size:17px;font-family:inherit;font-variant-numeric:tabular-nums}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{background:var(--accent);color:var(--on-accent);border:1px solid var(--accent);border-radius:10px;padding:9px 14px;font-size:14px;cursor:pointer;font-family:inherit}
+.ghost{background:transparent;border-color:var(--line);color:var(--muted)}
+.ghost.arm{border-color:var(--danger);color:var(--danger);background:var(--danger-bg)}
+.tip{font-size:12px;color:var(--muted);margin-top:10px}
+.tabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
+.tab{background:var(--surface);border:1px solid var(--line);color:var(--muted);border-radius:99px;padding:8px 16px;font-size:14px;cursor:pointer;white-space:nowrap;font-family:inherit}
+.tab.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600}
+.empty{color:var(--muted);font-size:14px;text-align:center;padding:12px 0}
+textarea{width:100%;min-height:110px;background:var(--inset);border:1px solid var(--line);border-radius:10px;color:var(--fg);font-family:ui-monospace,monospace;font-size:12px;padding:8px;direction:ltr}
+.msg{font-size:13px;color:var(--muted);margin-top:6px}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+input[type=number]{-moz-appearance:textfield}
+input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+@media (prefers-reduced-motion:reduce){.bar>i{transition:none}}
+</style>
+</head><body>
+
+<div class="wrap" dir="rtl" lang="ar">
+  <div>
+    <h1>التزاماتي</h1>
+    <div class="sub">اكتب ميزانيتك والتزاماتك الشهرية، وعلّم على اللي دفعته. بياناتك تنحفظ على جهازك أنت فقط.</div>
+  </div>
+
+  <div class="tabs" id="tabs"></div>
+
+  <div class="card">
+    <label class="field" for="budget">الميزانية الكلية للشهر</label>
+    <input class="budget" id="budget" type="number" inputmode="decimal" placeholder="مثلاً 10000">
+    <div class="stats">
+      <div class="stat"><div class="lbl">المتبقي من الميزانية</div><div class="val" id="left">0</div></div>
+      <div class="stat"><div class="lbl">إجمالي الالتزامات</div><div class="val" id="total">0</div></div>
+    </div>
+    <div class="bar"><i id="bar" style="width:0%"></i></div>
+    <div class="tip" id="tip"></div>
+  </div>
+
+  <div class="card" id="list"></div>
+
+  <div class="card actions">
+    <button class="btn" id="add">+ بند جديد</button>
+    <button class="btn ghost" id="copy">نسخة نصية</button>
+    <button class="btn ghost" id="backup">نسخ احتياطي</button>
+    <button class="btn ghost" id="restoreBtn">استرجاع نسخة</button>
+    <button class="btn ghost" id="reset">تصفير الشهر</button>
+  </div>
+
+  <div class="card" id="restorePanel" hidden>
+    <label class="field" for="restoreText">الصق النسخة الاحتياطية هنا</label>
+    <textarea id="restoreText" placeholder='{"months":[...]}'></textarea>
+    <div class="actions" style="margin-top:8px">
+      <button class="btn" id="restoreApply">استرجاع</button>
+      <button class="btn ghost" id="restoreCancel">إلغاء</button>
+    </div>
+    <div class="msg" id="restoreMsg"></div>
+  </div>
+</div>
+
+<script>
+var KEY='commitments-share-v1';
+var AR_MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+var HINTS=['إيجار البيت','فاتورة الكهرباء','قسط السيارة','فاتورة الجوال','اشتراك النت'];
+function monthOf(y,m){return {id:y+'-'+(m+1),y:y,m:m,name:AR_MONTHS[m]+' '+y,items:[],budget:''}}
+function blankItems(){return HINTS.map(function(h){return {name:'',amt:0,done:false,hint:h}})}
+function freshMonths(){
+  var d=new Date(),y=d.getFullYear(),m=d.getMonth();
+  var first=monthOf(y,m);first.items=blankItems();
+  return [first];
+}
+var MONTHS=freshMonths(),cur=0;
+
+function fmt(n){return Number(n||0).toLocaleString('en-US',{maximumFractionDigits:2})}
+function save(){try{localStorage.setItem(KEY,JSON.stringify({months:MONTHS,cur:cur}))}catch(e){}}
+function clean(ms){
+  return ms.map(function(m){
+    return {id:m.id||('m'+Date.now()+Math.random()),y:m.y,m:m.m,name:m.name||'شهر',budget:m.budget||'',
+      items:(m.items||[]).map(function(it){return Array.isArray(it)?{name:it[0]||'',amt:Number(it[1])||0,done:!!it[2]}:{name:it.name||'',amt:Number(it.amt)||0,done:!!it.done,hint:it.hint}})};
+  });
+}
+function load(){
+  try{var s=localStorage.getItem(KEY);if(!s)return;var o=JSON.parse(s);
+    if(o&&o.months&&o.months.length){MONTHS=clean(o.months);cur=Math.min(o.cur||0,MONTHS.length-1)}}catch(e){}
+}
+function nextMonth(){
+  var last=MONTHS[MONTHS.length-1];
+  if(typeof last.y==='number'&&typeof last.m==='number'){var m=last.m+1,y=last.y;if(m>11){m=0;y++}return monthOf(y,m)}
+  var d=new Date();return monthOf(d.getFullYear(),d.getMonth());
+}
+
+function calc(){
+  var m=MONTHS[cur],t=0,done=0,cnt=0;
+  m.items.forEach(function(it){var v=Number(it.amt)||0;t+=v;if(it.done){done+=v;cnt++}});
+  var bud=parseFloat(m.budget)||0,left=bud-t;
+  document.getElementById('total').textContent=fmt(t);
+  var L=document.getElementById('left');L.textContent=fmt(left);L.className='val'+(left<0?' neg':'');
+  document.getElementById('bar').style.width=(bud>0?Math.max(0,Math.min(100,t/bud*100)):0)+'%';
+  document.getElementById('tip').textContent=m.items.length?('دفعت '+cnt+' من '+m.items.length+' بنود بقيمة '+fmt(done)+'، والباقي '+fmt(t-done)):'';
+}
+
+function armButton(btn,armLabel,action){
+  if(btn.dataset.armed){action();return}
+  var orig=btn.textContent;btn.dataset.armed='1';btn.textContent=armLabel;btn.classList.add('arm');
+  setTimeout(function(){if(btn.isConnected&&btn.dataset.armed){delete btn.dataset.armed;btn.textContent=orig;btn.classList.remove('arm')}},3000);
+}
+
+function renderTabs(){
+  var tb=document.getElementById('tabs');tb.innerHTML='';
+  MONTHS.forEach(function(m,i){
+    var b=document.createElement('button');b.className='tab'+(i===cur?' on':'');b.textContent=m.name;
+    b.onclick=function(){cur=i;save();renderAll()};tb.appendChild(b);
+  });
+  var add=document.createElement('button');add.className='tab';add.textContent='+ الشهر الجاي';
+  add.onclick=function(){
+    var nm=nextMonth(),src=MONTHS[MONTHS.length-1];
+    nm.items=src.items.filter(function(it){return it.name||it.amt}).map(function(it){return {name:it.name,amt:it.amt,done:false}});
+    nm.budget=src.budget||'';
+    MONTHS.push(nm);cur=MONTHS.length-1;save();renderAll();
+  };
+  tb.appendChild(add);
+}
+
+function render(){
+  var m=MONTHS[cur];
+  document.getElementById('budget').value=m.budget||'';
+  var list=document.getElementById('list');list.innerHTML='';
+  if(!m.items.length){var e=document.createElement('div');e.className='empty';e.textContent='ما فيه بنود. اضغط "+ بند جديد" وأضف أول التزام.';list.appendChild(e)}
+  m.items.forEach(function(it,i){
+    var d=document.createElement('div');d.className='row'+(it.done?' done':'');
+    var b=document.createElement('button');b.className='chk'+(it.done?' on':'');b.textContent=it.done?'✓':'';b.setAttribute('aria-label','تم الدفع');
+    b.onclick=function(){it.done=!it.done;save();render()};
+    var n=document.createElement('input');n.className='name';n.id='name-'+cur+'-'+i;n.value=it.name||'';n.placeholder=it.hint||'اسم البند';
+    n.oninput=function(){it.name=n.value;save()};
+    var a=document.createElement('input');a.className='amt';a.id='amt-'+cur+'-'+i;a.type='number';a.inputMode='decimal';a.value=it.amt||'';a.placeholder='0';
+    a.oninput=function(){it.amt=parseFloat(a.value)||0;save();calc()};
+    var x=document.createElement('button');x.className='del';x.textContent='✕';x.setAttribute('aria-label','حذف البند');
+    x.onclick=function(){
+      var go=function(){var idx=m.items.indexOf(it);if(idx>-1){m.items.splice(idx,1);save();render()}};
+      if(!(it.name||'').trim()&&!it.amt){go();return}
+      armButton(x,'احذف؟',go);
+    };
+    d.appendChild(b);d.appendChild(n);d.appendChild(a);d.appendChild(x);list.appendChild(d);
+  });
+  calc();
+}
+function renderAll(){renderTabs();render()}
+
+function copyText(txt,btn,okLabel){
+  var orig=btn.textContent;
+  function done(l){btn.textContent=l;setTimeout(function(){btn.textContent=orig},1800)}
+  function fallback(){showPanel(txt,'انسخ النص يدوياً من المربع');done(orig)}
+  try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(function(){done(okLabel)},fallback);return}}catch(e){}
+  fallback();
+}
+function showPanel(text,msg){
+  var p=document.getElementById('restorePanel');p.hidden=false;
+  var t=document.getElementById('restoreText');t.value=text||'';document.getElementById('restoreMsg').textContent=msg||'';
+  if(text){t.focus();t.select()}
+}
+
+document.getElementById('budget').addEventListener('input',function(){MONTHS[cur].budget=this.value;save();calc()});
+document.getElementById('add').onclick=function(){MONTHS[cur].items.push({name:'',amt:0,done:false});save();render();
+  var ins=document.querySelectorAll('#list .name');if(ins.length)ins[ins.length-1].focus()};
+document.getElementById('reset').onclick=function(){var btn=this;armButton(btn,'متأكد؟ اضغط مرة ثانية',function(){
+  delete btn.dataset.armed;btn.textContent='تصفير الشهر';btn.classList.remove('arm');
+  MONTHS[cur].items=[];MONTHS[cur].budget='';save();render()})};
+document.getElementById('copy').onclick=function(){
+  var m=MONTHS[cur],items=m.items.filter(function(it){return it.name||it.amt});
+  var tot=items.reduce(function(s,it){return s+(Number(it.amt)||0)},0);
+  var txt='التزامات '+m.name+'\n'+items.map(function(it,i){return (i+1)+'. '+(it.name||'—')+': '+fmt(it.amt)+(it.done?' ✓':'')}).join('\n')+'\n\nالإجمالي: '+fmt(tot)+(m.budget?'\nالمتبقي: '+fmt((parseFloat(m.budget)||0)-tot):'');
+  copyText(txt,this,'نُسخت ✓');
+};
+document.getElementById('backup').onclick=function(){
+  copyText(JSON.stringify({app:'commitments',version:1,exported:new Date().toISOString(),months:MONTHS}),this,'نُسخت النسخة ✓');
+};
+document.getElementById('restoreBtn').onclick=function(){showPanel('','الصق النسخة اللي نسختها من زر "نسخ احتياطي"')};
+document.getElementById('restoreCancel').onclick=function(){document.getElementById('restorePanel').hidden=true};
+document.getElementById('restoreApply').onclick=function(){
+  try{var o=JSON.parse(document.getElementById('restoreText').value);var ms=o.months||o;if(!ms||!ms.length)throw 0;
+    MONTHS=clean(ms);cur=0;save();renderAll();document.getElementById('restorePanel').hidden=true;
+  }catch(e){document.getElementById('restoreMsg').textContent='النص هذا مو نسخة صحيحة. تأكد إنك نسخته كامل.'}
+};
+
+load();renderAll();
+</script>
+</body></html>

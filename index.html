@@ -117,7 +117,7 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
 
   <div class="seg" role="tablist">
     <button class="segb on" id="navMain" role="tab">الالتزامات</button>
-    <button class="segb" id="navSpend" role="tab">وين راحت فلوسي</button>
+    <button class="segb" id="navSpend" role="tab">تحليل المصروفات</button>
   </div>
 
   <div class="tabs" id="tabs"></div>
@@ -125,7 +125,7 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
   <div id="viewMain" class="view">
     <div class="card">
       <label class="field" for="budget">الميزانية الكلية للشهر</label>
-      <input class="budget" id="budget" type="number" inputmode="decimal" placeholder="اكتب ميزانيتك هنا">
+      <input class="budget" id="budget" type="number" inputmode="decimal" placeholder="أدخل المبلغ">
       <div class="stats">
         <div class="stat"><div class="lbl">المتبقي من الميزانية</div><div class="val" id="left">0</div></div>
         <div class="stat"><div class="lbl">إجمالي الالتزامات</div><div class="val" id="total">0</div></div>
@@ -138,36 +138,36 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
 
     <div class="actions">
       <button class="btn" id="add">+ بند جديد</button>
-      <button class="btn ghost" id="copy">نسخة نصية</button>
-      <button class="btn ghost" id="reset">تصفير الشهر</button>
+      <button class="btn ghost" id="copy">نسخ كنص</button>
+      <button class="btn ghost" id="reset">إعادة تعيين الشهر</button>
     </div>
   </div>
 
   <div id="viewSpend" class="view" hidden>
     <div class="card">
-      <label class="field" for="actual">كم باقي معك فعلياً الحين؟</label>
-      <input class="budget" id="actual" type="number" inputmode="decimal" placeholder="اكتب الرصيد اللي معك">
+      <label class="field" for="actual">الرصيد الحالي</label>
+      <input class="budget" id="actual" type="number" inputmode="decimal" placeholder="أدخل المبلغ">
       <div class="stats" id="checkStats" hidden>
-        <div class="stat"><div class="lbl">المفروض يكون معك</div><div class="val" id="expected">0</div></div>
-        <div class="stat"><div class="lbl" id="outLbl">صرفته خارج الحسبة</div><div class="val" id="outside">0</div></div>
+        <div class="stat"><div class="lbl">الرصيد المتوقع</div><div class="val" id="expected">0</div></div>
+        <div class="stat"><div class="lbl" id="outLbl">مصروفات غير مدرجة</div><div class="val" id="outside">0</div></div>
       </div>
-      <div class="note" id="checkNote">المفروض = الميزانية ناقص الالتزامات اللي علّمتها مدفوعة.</div>
+      <div class="note" id="checkNote">الرصيد المتوقع = الميزانية − الالتزامات المدفوعة.</div>
     </div>
 
     <div class="card" id="spend">
-      <h2>رسايل البنك</h2>
-      <div class="sub">انسخ رسايل البنك من يوم الراتب والصقها هنا. التحليل يصير على جوالك، وما تطلع الرسايل منه.</div>
-      <textarea class="sms" id="smsText" placeholder="الصق الرسايل هنا" aria-label="رسايل البنك" style="margin-top:10px"></textarea>
+      <h2>الرسائل البنكية</h2>
+      <div class="sub">الصق الرسائل البنكية منذ تاريخ إيداع الراتب. تتم المعالجة على الجهاز فقط، ولا تُرسل الرسائل إلى أي جهة.</div>
+      <textarea class="sms" id="smsText" placeholder="الصق الرسائل هنا" aria-label="الرسائل البنكية" style="margin-top:10px"></textarea>
       <div class="actions" style="margin-top:8px">
-        <button class="btn" id="parseBtn">حلّل الرسايل</button>
-        <button class="btn ghost" id="clearTx">مسح عمليات الشهر</button>
+        <button class="btn" id="parseBtn">تحليل</button>
+        <button class="btn ghost" id="clearTx">حذف عمليات الشهر</button>
       </div>
       <div class="msg" id="parseMsg"></div>
       <div class="note" id="rangeNote"></div>
       <div id="spendOut" hidden>
         <div class="stats">
-          <div class="stat"><div class="lbl">دفعته للالتزامات</div><div class="val" id="spCommit">0</div></div>
-          <div class="stat"><div class="lbl">خارج الالتزامات</div><div class="val neg" id="spOut">0</div></div>
+          <div class="stat"><div class="lbl">مدفوعات الالتزامات</div><div class="val" id="spCommit">0</div></div>
+          <div class="stat"><div class="lbl">مصروفات أخرى</div><div class="val neg" id="spOut">0</div></div>
         </div>
         <div class="recon" id="recon" hidden></div>
         <div id="secAsk"></div>
@@ -178,17 +178,17 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
     </div>
 
     <div class="card">
-      <h2>نسخة احتياطية</h2>
-      <div class="sub">انقل بياناتك لجوال ثاني أو احفظها عندك.</div>
+      <h2>النسخ الاحتياطي</h2>
+      <div class="sub">صدّر بياناتك لحفظها أو نقلها إلى جهاز آخر.</div>
       <div class="actions" style="margin-top:10px">
-        <button class="btn ghost" id="backup">نسخ احتياطي</button>
-        <button class="btn ghost" id="restoreBtn">استرجاع نسخة</button>
+        <button class="btn ghost" id="backup">تصدير</button>
+        <button class="btn ghost" id="restoreBtn">استيراد</button>
       </div>
       <div id="restorePanel" hidden style="margin-top:10px">
-        <label class="field" for="restoreText">الصق النسخة الاحتياطية هنا</label>
+        <label class="field" for="restoreText">الصق بيانات النسخة الاحتياطية</label>
         <textarea id="restoreText" placeholder='{"months":[...]}'></textarea>
         <div class="actions" style="margin-top:8px">
-          <button class="btn" id="restoreApply">استرجاع</button>
+          <button class="btn" id="restoreApply">استيراد</button>
           <button class="btn ghost" id="restoreCancel">إلغاء</button>
         </div>
         <div class="msg" id="restoreMsg"></div>
@@ -243,10 +243,10 @@ function calc(){
     cs.hidden=false;var a=parseFloat(act)||0,out=expected-a;
     document.getElementById('expected').textContent=fmt(expected);
     var O=document.getElementById('outside'),OL=document.getElementById('outLbl');
-    if(out>=0){OL.textContent='صرفته خارج الحسبة';O.textContent=fmt(out);O.className='val'+(out>0?' neg':'')}
-    else{OL.textContent='زيادة عن المتوقع';O.textContent=fmt(-out);O.className='val pos'}
+    if(out>=0){OL.textContent='مصروفات غير مدرجة';O.textContent=fmt(out);O.className='val'+(out>0?' neg':'')}
+    else{OL.textContent='فائض عن المتوقع';O.textContent=fmt(-out);O.className='val pos'}
   }
-  document.getElementById('tip').textContent=m.items.length?('دفعت '+cnt+' من '+m.items.length+' بنود بقيمة '+fmt(done)+'، والباقي '+fmt(t-done)):'';
+  document.getElementById('tip').textContent=m.items.length?('المدفوع: '+cnt+' من '+m.items.length+' بنود بقيمة '+fmt(done)+' · المتبقي: '+fmt(t-done)):'';
 }
 
 function armButton(btn,armLabel,action){
@@ -261,7 +261,7 @@ function renderTabs(){
     var b=document.createElement('button');b.className='tab'+(i===cur?' on':'');b.textContent=m.name;
     b.onclick=function(){cur=i;save();renderAll()};tb.appendChild(b);
   });
-  var add=document.createElement('button');add.className='tab';add.textContent='+ الشهر الجاي';
+  var add=document.createElement('button');add.className='tab';add.textContent='+ شهر جديد';
   add.onclick=function(){
     var nm=nextMonth(),src=MONTHS[MONTHS.length-1];
     nm.items=src.items.filter(function(it){return it.name||it.amt}).map(function(it){return {id:iid(),name:it.name,amt:it.amt,done:false}});
@@ -276,7 +276,7 @@ function render(){
   document.getElementById('budget').value=m.budget||'';
   document.getElementById('actual').value=(m.actual==null)?'':m.actual;
   var list=document.getElementById('list');list.innerHTML='';
-  if(!m.items.length){var e=document.createElement('div');e.className='empty';e.textContent='ما فيه بنود. اضغط "+ بند جديد" وأضف أول التزام.';list.appendChild(e)}
+  if(!m.items.length){var e=document.createElement('div');e.className='empty';e.textContent='لا توجد بنود. أضف أول التزام عبر "+ بند جديد".';list.appendChild(e)}
   m.items.forEach(function(it,i){
     var d=document.createElement('div');d.className='row'+(it.done?' done':'');
     var b=document.createElement('button');b.className='chk'+(it.done?' on':'');b.textContent=it.done?'✓':'';b.setAttribute('aria-label','تم الدفع');
@@ -289,7 +289,7 @@ function render(){
     x.onclick=function(){
       var go=function(){var idx=m.items.indexOf(it);if(idx>-1){m.items.splice(idx,1);save();render()}};
       if(!(it.name||'').trim()&&!it.amt){go();return}
-      armButton(x,'احذف؟',go);
+      armButton(x,'تأكيد الحذف',go);
     };
     d.appendChild(b);d.appendChild(n);d.appendChild(a);d.appendChild(x);list.appendChild(d);
   });
@@ -300,7 +300,7 @@ function renderAll(){renderTabs();renderSpend();render()}
 function copyText(txt,btn,okLabel){
   var orig=btn.textContent;
   function done(l){btn.textContent=l;setTimeout(function(){btn.textContent=orig},1800)}
-  function fallback(){showPanel(txt,'انسخ النص يدوياً من المربع');done(orig)}
+  function fallback(){showPanel(txt,'انسخ النص يدوياً من الحقل');done(orig)}
   try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(function(){done(okLabel)},fallback);return}}catch(e){}
   fallback();
 }
@@ -315,28 +315,28 @@ document.getElementById('actual').addEventListener('input',function(){MONTHS[cur
 document.getElementById('budget').addEventListener('input',function(){MONTHS[cur].budget=this.value;save();calc()});
 document.getElementById('add').onclick=function(){MONTHS[cur].items.push({id:iid(),name:'',amt:0,done:false});save();render();
   var ins=document.querySelectorAll('#list .name');if(ins.length)ins[ins.length-1].focus()};
-document.getElementById('reset').onclick=function(){var btn=this;armButton(btn,'متأكد؟ اضغط مرة ثانية',function(){
-  delete btn.dataset.armed;btn.textContent='تصفير الشهر';btn.classList.remove('arm');
+document.getElementById('reset').onclick=function(){var btn=this;armButton(btn,'اضغط مرة أخرى للتأكيد',function(){
+  delete btn.dataset.armed;btn.textContent='إعادة تعيين الشهر';btn.classList.remove('arm');
   MONTHS[cur].items=[];MONTHS[cur].budget='';MONTHS[cur].actual='';save();render()})};
 document.getElementById('copy').onclick=function(){
   var m=MONTHS[cur],items=m.items.filter(function(it){return it.name||it.amt});
   var tot=items.reduce(function(s,it){return s+(Number(it.amt)||0)},0);
   var txt='التزامات '+m.name+'\n'+items.map(function(it,i){return (i+1)+'. '+(it.name||'—')+': '+fmt(it.amt)+(it.done?' ✓':'')}).join('\n')+'\n\nالإجمالي: '+fmt(tot)+(m.budget?'\nالمتبقي: '+fmt((parseFloat(m.budget)||0)-tot):'');
-  copyText(txt,this,'نُسخت ✓');
+  copyText(txt,this,'تم النسخ ✓');
 };
 document.getElementById('backup').onclick=function(){
-  copyText(JSON.stringify({app:'commitments',version:2,exported:new Date().toISOString(),months:MONTHS,tx:TX,txv:TXV,catMap:CATMAP,linkMap:LINKMAP}),this,'نُسخت النسخة ✓');
+  copyText(JSON.stringify({app:'commitments',version:2,exported:new Date().toISOString(),months:MONTHS,tx:TX,txv:TXV,catMap:CATMAP,linkMap:LINKMAP}),this,'تم التصدير ✓');
 };
-document.getElementById('restoreBtn').onclick=function(){showPanel('','الصق النسخة اللي نسختها من زر "نسخ احتياطي"')};
+document.getElementById('restoreBtn').onclick=function(){showPanel('','الصق البيانات المنسوخة من زر "تصدير"')};
 document.getElementById('restoreCancel').onclick=function(){document.getElementById('restorePanel').hidden=true};
 document.getElementById('restoreApply').onclick=function(){
   try{var o=JSON.parse(document.getElementById('restoreText').value);var ms=o.months||o;if(!ms||!ms.length)throw 0;
     MONTHS=clean(ms);if(Array.isArray(o.tx))TX=o.tx;if(o.linkMap)LINKMAP=o.linkMap;if(o.catMap)CATMAP=o.catMap;cur=0;save();renderAll();document.getElementById('restorePanel').hidden=true;
-  }catch(e){document.getElementById('restoreMsg').textContent='النص هذا مو نسخة صحيحة. تأكد إنك نسخته كامل.'}
+  }catch(e){document.getElementById('restoreMsg').textContent='البيانات غير صالحة. تأكد من نسخها كاملة.'}
 };
 
 
-/* ===== وين راحت فلوسي ===== */
+/* ===== تحليل المصروفات ===== */
 var CATS=['مطاعم وقهوة','بقالة','بنزين ومواصلات','فواتير واشتراكات','حكومية ومخالفات','تسوق','صحة','ترفيه','تحويلات','سحب نقدي','أخرى'];
 var CAT_RULES=[
  ['حكومية ومخالفات',/وزارة|الداخلية|مخالفات|المرور|أبشر|ابشر|absher|جوازات|بلدي|ناجز|najiz|حكومي/i],
@@ -455,13 +455,13 @@ function autoLink(list){
   items.forEach(function(i){if(paidFor(i.id,outs)>=i.amt-tol(i.amt))i.done=true});
 }
 function linkSelect(t,list){
-  var sel=document.createElement('select');sel.setAttribute('aria-label','يتبع أي التزام');
+  var sel=document.createElement('select');sel.setAttribute('aria-label','الالتزام المرتبط');
   function opt(v,txt,on){var o=document.createElement('option');o.value=v;o.textContent=txt;if(on)o.selected=true;sel.appendChild(o)}
-  if(!t.link)opt('','اختر: التزام أو لا؟',true);
-  opt('none','مو التزام (مصروف)',t.link==='none');
+  if(!t.link)opt('','اختر التصنيف',true);
+  opt('none','مصروف عام',t.link==='none');
   var outs=list.filter(function(x){return x.kind==='out'});
   var its=mItems();if(!t.link&&t.sug){its=its.slice().sort(function(a,b){return (b.id===t.sug)-(a.id===t.sug)})}
-  its.forEach(function(i){var rem=i.amt-paidFor(i.id,outs);opt(i.id,(!t.link&&i.id===t.sug?'⭐ ':'')+i.name+' ('+fmt(i.amt)+(rem>tol(i.amt)&&rem<i.amt?'، باقي '+fmt(rem):'')+')',t.link===i.id)});
+  its.forEach(function(i){var rem=i.amt-paidFor(i.id,outs);opt(i.id,(!t.link&&i.id===t.sug?'⭐ ':'')+i.name+' ('+fmt(i.amt)+(rem>tol(i.amt)&&rem<i.amt?'، المتبقي '+fmt(rem):'')+')',t.link===i.id)});
   sel.onchange=function(){
     t.link=sel.value||undefined;t.auto=false;
     var key=t.merchant.toLowerCase(),it=itemById(sel.value);
@@ -482,7 +482,7 @@ function txRow(t,list,mode){
   var nm=document.createElement('div');nm.className='tm';nm.textContent=t.merchant;
   var am=document.createElement('div');am.className='ta'+(t.kind==='in'?' in':'');am.textContent=(t.kind==='in'?'+':'')+fmt(t.amt)+(t.cur!=='SAR'?' '+t.cur:'');
   var x=document.createElement('button');x.className='del';x.textContent='✕';x.setAttribute('aria-label','حذف العملية');
-  x.onclick=function(){armButton(x,'احذف؟',function(){TX=TX.filter(function(y){return y.id!==t.id});save();renderSpend()})};
+  x.onclick=function(){armButton(x,'تأكيد الحذف',function(){TX=TX.filter(function(y){return y.id!==t.id});save();renderSpend()})};
   var dt=document.createElement('div');dt.className='td';dt.textContent=(fmtDate(t.date)+' '+(t.time||'')).trim();
   row.appendChild(nm);row.appendChild(am);row.appendChild(x);
   if(t.kind==='out'&&t.cur==='SAR')row.appendChild(linkSelect(t,list));
@@ -500,7 +500,7 @@ function sec(id,cls,title,total){
 function renderSpend(){
   var m=MONTHS[cur],r=monthRange(cur);
   var rn=document.getElementById('rangeNote');
-  rn.textContent=r.bySalary?('الفترة من نزول الراتب '+fmtDate(r.start)+(r.end?' إلى قبل الراتب اللي بعده '+fmtDate(r.end):' إلى اليوم')+'.'):'ما لقيت رسالة الراتب، فيحسب من بداية الشهر. الصق رسالة الراتب مع الرسايل ويضبط الفترة بنفسه.';
+  rn.textContent=r.bySalary?('الفترة: من تاريخ إيداع الراتب '+fmtDate(r.start)+(r.end?' حتى الراتب التالي '+fmtDate(r.end):' حتى اليوم')+'.'):'لم يتم العثور على رسالة الراتب، وتُحتسب الفترة من بداية الشهر. أضف رسالة إيداع الراتب لضبط الفترة تلقائياً.';
   var list=txOfMonth(cur),box=document.getElementById('spendOut');
   box.hidden=!list.length;if(!list.length)return;
   autoLink(list);save();
@@ -515,22 +515,22 @@ function renderSpend(){
   var rc=document.getElementById('recon'),bud=parseFloat(m.budget)||0,act=m.actual;
   if(bud&&act!==''&&act!=null){
     var paid=m.items.reduce(function(s,i){return s+(i.done?(Number(i.amt)||0):0)},0),gap=bud-paid-(parseFloat(act)||0),real=gap+extraIn;
-    var h='حسب رصيدك، صرفت خارج الالتزامات <b>'+fmt(real)+'</b>';
-    if(extraIn)h+=' (الفرق '+fmt(gap)+' + دخل إضافي وصلك '+fmt(extraIn)+')';
-    h+='.<br>لقيت منها في الرسايل <b>'+fmt(outT)+'</b>';
-    if(ask.length)h+='، وفيه <b>'+ask.length+'</b> عمليات بـ '+fmt(askT)+' تحتاج تحددها';
+    var h='المصروفات غير المدرجة حسب الرصيد: <b>'+fmt(real)+'</b>';
+    if(extraIn)h+=' (الفرق '+fmt(gap)+' + إيرادات إضافية '+fmt(extraIn)+')';
+    h+='.<br>المرصود في الرسائل: <b>'+fmt(outT)+'</b>';
+    if(ask.length)h+='، و<b>'+ask.length+'</b> عمليات بقيمة '+fmt(askT)+' بانتظار التصنيف';
     var diff=real-outT-askT;
-    if(diff>tol(real))h+='.<br><span class="warnc">باقي <b>'+fmt(diff)+'</b> ما لقيت لها رسالة: كاش، أو بنود علّمتها مدفوعة وهي ما انخصمت، أو رسايل ما لصقتها.</span>';
-    else if(diff<-tol(real))h+='.<br>الرسايل أكثر من الفرق بـ <b>'+fmt(-diff)+'</b>: غالباً فيه بند ما علّمته مدفوع وهو مدفوع.';
+    if(diff>tol(real))h+='.<br><span class="warnc">مبلغ غير مرصود: <b>'+fmt(diff)+'</b>. قد يكون مصروفاً نقدياً، أو التزاماً مُعلّماً كمدفوع ولم يُخصم، أو رسائل لم تُضف.</span>';
+    else if(diff<-tol(real))h+='.<br>الرسائل تتجاوز الفرق بمقدار <b>'+fmt(-diff)+'</b>. قد يكون أحد الالتزامات مدفوعاً ولم يُعلَّم.';
     else h+='.<br><span class="ok">الحساب مطابق.</span>';
     rc.innerHTML=h;rc.hidden=false;
-  }else{rc.hidden=false;rc.textContent='اكتب الميزانية و"كم باقي معك فعلياً" فوق، ويقارن لك الرسايل برصيدك.'}
+  }else{rc.hidden=false;rc.textContent='أدخل الميزانية في صفحة الالتزامات والرصيد الحالي أعلاه لمطابقة الرسائل مع الرصيد.'}
   // تحتاج تحديد
   var d;
-  if(ask.length){d=sec('secAsk','ask','حدد هذي العمليات: التزام أو لا؟',fmt(askT));var hn=document.createElement('div');hn.className='note';hn.style.marginTop='0';hn.textContent='تحددها مرة وحدة، والشهر الجاي يعرف المستلم بنفسه. ⭐ = اقتراح حسب المبلغ.';d.appendChild(hn);ask.forEach(function(t){d.appendChild(txRow(t,list))})}else document.getElementById('secAsk').innerHTML='';
+  if(ask.length){d=sec('secAsk','ask','عمليات بانتظار التصنيف',fmt(askT));var hn=document.createElement('div');hn.className='note';hn.style.marginTop='0';hn.textContent='يُحفظ التصنيف لكل مستفيد ويُطبّق تلقائياً في الأشهر التالية. ⭐ اقتراح حسب المبلغ.';d.appendChild(hn);ask.forEach(function(t){d.appendChild(txRow(t,list))})}else document.getElementById('secAsk').innerHTML='';
   // خارج الالتزامات
   if(out.length){
-    d=sec('secOut','','خارج الالتزامات',fmt(outT));
+    d=sec('secOut','','مصروفات أخرى',fmt(outT));
     var by={};out.forEach(function(t){by[t.cat]=(by[t.cat]||0)+t.amt});
     var cats=document.createElement('div');cats.className='cats';
     Object.keys(by).sort(function(a,b){return by[b]-by[a]}).forEach(function(c){
@@ -551,17 +551,17 @@ function renderSpend(){
     gh.appendChild(n);gh.appendChild(v);g.appendChild(gh);
     var gs=document.createElement('div');gs.className='gs';
     if(tx.length)gs.textContent=tx.map(function(t){return t.merchant+' '+fmt(t.amt)+' ('+fmtDate(t.date)+')'}).join('، ');
-    else gs.textContent=i.done?'معلّم مدفوع، بس ما لقيت له رسالة':'ما لقيت له رسالة للحين';
-    if(p>0&&p<i.amt-tol(i.amt))gs.textContent+=' · باقي '+fmt(i.amt-p);
+    else gs.textContent=i.done?'مُعلّم كمدفوع، ولا توجد رسالة مطابقة':'لا توجد رسالة مطابقة';
+    if(p>0&&p<i.amt-tol(i.amt))gs.textContent+=' · المتبقي '+fmt(i.amt-p);
     g.appendChild(gs);d.appendChild(g);
   });
-  if(com.length){var tg=document.createElement('button');tg.className='toggle';tg.textContent='تعديل ربط عمليات الالتزامات';var wrap=document.createElement('div');wrap.hidden=true;
+  if(com.length){var tg=document.createElement('button');tg.className='toggle';tg.textContent='تعديل ربط العمليات';var wrap=document.createElement('div');wrap.hidden=true;
     com.forEach(function(t){wrap.appendChild(txRow(t,list))});tg.onclick=function(){wrap.hidden=!wrap.hidden};d.appendChild(tg);d.appendChild(wrap)}
   // الدخل
-  if(ins.length){d=sec('secIn','','دخل وصلك',fmt(sum(ins.filter(function(t){return t.cur==='SAR'}))));ins.forEach(function(t){d.appendChild(txRow(t,list))})}else document.getElementById('secIn').innerHTML='';
+  if(ins.length){d=sec('secIn','','الإيرادات',fmt(sum(ins.filter(function(t){return t.cur==='SAR'}))));ins.forEach(function(t){d.appendChild(txRow(t,list))})}else document.getElementById('secIn').innerHTML='';
 }
-document.getElementById('clearTx').onclick=function(){var btn=this;armButton(btn,'متأكد؟ اضغط مرة ثانية',function(){
-  delete btn.dataset.armed;btn.textContent='مسح عمليات الشهر';btn.classList.remove('arm');
+document.getElementById('clearTx').onclick=function(){var btn=this;armButton(btn,'اضغط مرة أخرى للتأكيد',function(){
+  delete btn.dataset.armed;btn.textContent='حذف عمليات الشهر';btn.classList.remove('arm');
   var ids={};txOfMonth(cur).forEach(function(t){ids[t.id]=1});TX=TX.filter(function(t){return !ids[t.id]});save();renderSpend()})};
 document.getElementById('parseBtn').onclick=function(){
   var ta=document.getElementById('smsText'),msgs=splitMsgs(ta.value),added=0,dup=0,skip=0,inc=0,otp=0,sal='';
@@ -585,9 +585,9 @@ document.getElementById('parseBtn').onclick=function(){
     have[id]=1;added++;if(income)inc++;
   });
   save();ta.value='';
-  var msg='أضفت '+added+' عملية';if(inc)msg+=' (منها '+inc+' دخل)';if(dup)msg+='، و'+dup+' مكررة ما حسبتها مرتين';if(otp)msg+='، وتجاهلت '+otp+' رسالة رمز تحقق';if(skip)msg+='، و'+skip+' رسالة ما فيها مبلغ';
-  if(sal)msg+='. ولقيت الراتب نازل '+fmtDate(sal);
-  var inRange=txOfMonth(cur).length;if(added&&!inRange)msg+='. تواريخ العمليات خارج فترة هالشهر، جرّب تبويب شهر ثاني';
+  var msg='تمت إضافة '+added+' عملية';if(inc)msg+=' (منها '+inc+' إيراد)';if(dup)msg+=' · '+dup+' مكررة لم تُحتسب';if(otp)msg+=' · '+otp+' رسالة رمز تحقق مستبعدة';if(skip)msg+=' · '+skip+' رسالة بدون مبلغ';
+  if(sal)msg+='. تاريخ إيداع الراتب: '+fmtDate(sal);
+  var inRange=txOfMonth(cur).length;if(added&&!inRange)msg+='. تواريخ العمليات خارج فترة هذا الشهر، اختر شهراً آخر';
   document.getElementById('parseMsg').textContent=msg+'.';
   renderSpend();render();
 };

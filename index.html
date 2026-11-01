@@ -361,6 +361,7 @@ function findMerchant(b){
   if(f&&!/^[\d*\s;:-]+$/.test(f[1]))return f[1].replace(/\s+/g,' ').trim().slice(0,60);
   var first=b.split('\n')[0];return first.slice(0,60);
 }
+function isOtp(b){return /رمز\s*(?:ال)?(?:تحقق|تفعيل|سري|مؤقت|عملية|دخول|تأكيد)|رمز\s*[:：]?\s*\d{4,6}|كود|otp|verification|one[- ]?time|لا\s?تشارك|لاتشارك|do not share|كلمة\s*(?:ال)?مرور|passcode|\bcode\b/i.test(b)}
 function isIncome(b){return /واردة|وارده|إيداع|ايداع|استرداد|راتب|incoming|deposit|credit(?!\s*card)|refund|salary|payroll|مسترد/i.test(b)&&!/صادرة|صادره|outgoing|شراء|purchase/i.test(b)}
 function isSalary(b){return /راتب|salary|payroll|رواتب/i.test(b)}
 function guessCat(merchant,b){
@@ -432,10 +433,10 @@ document.getElementById('clearTx').onclick=function(){var btn=this;armButton(btn
   delete btn.dataset.armed;btn.textContent='مسح عمليات الشهر';btn.classList.remove('arm');
   var ids={};txOfMonth(cur).forEach(function(t){ids[t.id]=1});TX=TX.filter(function(t){return !ids[t.id]});save();renderSpend()})};
 document.getElementById('parseBtn').onclick=function(){
-  var ta=document.getElementById('smsText'),msgs=splitMsgs(ta.value),added=0,dup=0,skip=0,inc=0,sal='';
+  var ta=document.getElementById('smsText'),msgs=splitMsgs(ta.value),added=0,dup=0,skip=0,inc=0,otp=0,sal='';
   var have={};TX.forEach(function(t){have[t.id]=1});
   msgs.forEach(function(b){
-    if(/رمز|otp|code|كلمة المرور|verification/i.test(b)&&!/شراء|purchase/i.test(b)){skip++;return}
+    if(isOtp(b)){otp++;return}
     var a=findAmount(b);if(!a||!(a.amt>0)){skip++;return}
     var id=hash(b);if(have[id]){dup++;return}
     var d=findDate(b),income=isIncome(b),bud=parseFloat(MONTHS[cur].budget)||0;
@@ -456,7 +457,7 @@ document.getElementById('parseBtn').onclick=function(){
     have[id]=1;added++;if(income)inc++;
   });
   save();ta.value='';
-  var msg='أضفت '+added+' عملية';if(inc)msg+=' (منها '+inc+' دخل)';if(dup)msg+='، و'+dup+' مكررة ما حسبتها مرتين';if(skip)msg+='، و'+skip+' رسالة ما فيها مبلغ';
+  var msg='أضفت '+added+' عملية';if(inc)msg+=' (منها '+inc+' دخل)';if(dup)msg+='، و'+dup+' مكررة ما حسبتها مرتين';if(otp)msg+='، وتجاهلت '+otp+' رسالة رمز تحقق';if(skip)msg+='، و'+skip+' رسالة ما فيها مبلغ';
   if(sal)msg+='. ولقيت الراتب نازل '+fmtDate(sal);
   var outside=txOfMonth(cur).length;if(added&&!outside)msg+='. تواريخ العمليات خارج فترة هالشهر، غيّر الشهر أو تاريخ الراتب';
   document.getElementById('parseMsg').textContent=msg+'.';

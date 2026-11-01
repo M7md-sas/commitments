@@ -135,10 +135,6 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
   <div class="card" id="spend">
     <h2>وين راحت فلوسي</h2>
     <div class="sub">انسخ رسايل البنك من تطبيق الرسايل والصقها هنا. التحليل يصير على جوالك، وما تطلع الرسايل منه.</div>
-    <label class="field" for="salaryDate" style="margin-top:10px">تاريخ نزول راتب هالشهر</label>
-    <div class="daterow">
-      <input type="date" id="salaryDate">
-    </div>
     <div class="note" id="rangeNote"></div>
     <label class="field" for="smsText" style="margin-top:12px">رسايل البنك</label>
     <textarea class="sms" id="smsText" placeholder="الصق رسالة أو أكثر هنا"></textarea>
@@ -194,7 +190,7 @@ function clean(ms){
 function load(){
   try{var s=localStorage.getItem(KEY);if(!s)return;var o=JSON.parse(s);
     if(o&&o.months&&o.months.length){MONTHS=clean(o.months);cur=Math.min(o.cur||0,MONTHS.length-1)}
-    if(o&&Array.isArray(o.tx))TX=o.tx;if(o&&o.catMap)CATMAP=o.catMap;}catch(e){}
+    if(o&&Array.isArray(o.tx)){TX=o.tx;TX.forEach(function(t){if(t.merchant==='راتب')t.salary=true;if(t.cat==='تحويلات')t.tr=true})}if(o&&o.catMap)CATMAP=o.catMap;}catch(e){}
 }
 function nextMonth(){
   var last=MONTHS[MONTHS.length-1];
@@ -374,12 +370,16 @@ function guessCat(merchant,b){
   for(i=0;i<CAT_RULES.length;i++){if(CAT_RULES[i][1].test(b))return CAT_RULES[i][0]}
   return 'أخرى';
 }
+function ymd(y,m,d){var dt=new Date(Date.UTC(y,m,d));return dt.toISOString().slice(0,10)}
+function salaries(){return TX.filter(function(t){return t.salary&&t.date}).map(function(t){return t.date}).sort()}
 function monthRange(i){
-  var m=MONTHS[i],start=m.salaryDate||'',end='';
-  for(var j=i+1;j<MONTHS.length;j++){if(MONTHS[j].salaryDate){end=MONTHS[j].salaryDate;break}}
-  if(!start&&typeof m.y==='number'){start=m.y+'-'+String(m.m+1).padStart(2,'0')+'-01';
-    if(!end){var ny=m.m===11?m.y+1:m.y,nm=m.m===11?1:m.m+2;end=ny+'-'+String(nm).padStart(2,'0')+'-01'}}
-  return {start:start,end:end,bySalary:!!m.salaryDate};
+  var m=MONTHS[i],y=m.y,mo=m.m;
+  if(typeof y!=='number'){var n=new Date();y=n.getFullYear();mo=n.getMonth()}
+  var lo=ymd(y,mo-1,15),hi=ymd(y,mo,15),sal=salaries(),start='',end='';
+  sal.forEach(function(d){if(d>=lo&&d<hi)start=start||d});
+  if(start){for(var k=0;k<sal.length;k++){if(sal[k]>start&&sal[k]>=ymd(y,mo,15)){end=sal[k];break}}
+    if(!end)end='';return {start:start,end:end,bySalary:true}}
+  return {start:ymd(y,mo,1),end:ymd(y,mo+1,1),bySalary:false};
 }
 function txOfMonth(i){
   var r=monthRange(i),id=MONTHS[i].id;
@@ -393,10 +393,9 @@ function txOfMonth(i){
 function fmtDate(d){if(!d)return '';var p=d.split('-');return +p[2]+'/'+(+p[1])}
 function renderSpend(){
   var m=MONTHS[cur],r=monthRange(cur);
-  document.getElementById('salaryDate').value=m.salaryDate||'';
   var rn=document.getElementById('rangeNote');
-  if(r.bySalary)rn.textContent='يحسب العمليات من '+fmtDate(r.start)+(r.end?' إلى قبل '+fmtDate(r.end):' وطالع')+'.';
-  else rn.textContent='ما حددت تاريخ الراتب، فيحسب على الشهر الميلادي. إذا لصقت رسالة الراتب يتحدد تلقائياً.';
+  if(r.bySalary)rn.textContent='يحسب من نزول الراتب '+fmtDate(r.start)+(r.end?' إلى قبل الراتب اللي بعده '+fmtDate(r.end):' وطالع')+'.';
+  else rn.textContent='ما لقيت رسالة الراتب، فيحسب من بداية الشهر. الصق رسالة الراتب مع الرسايل ويضبطها بنفسه.';
   var list=txOfMonth(cur),out=list.filter(function(t){return t.kind==='out'&&t.cur==='SAR'});
   var box=document.getElementById('spendOut');box.hidden=!list.length;if(!list.length)return;
   var tot=out.reduce(function(s,t){return s+t.amt},0);
@@ -428,7 +427,6 @@ function renderSpend(){
     row.appendChild(nm);row.appendChild(am);row.appendChild(x);row.appendChild(sel);row.appendChild(dt);tl.appendChild(row);
   });
 }
-document.getElementById('salaryDate').addEventListener('change',function(){MONTHS[cur].salaryDate=this.value;save();renderSpend()});
 document.getElementById('txToggle').onclick=function(){var l=document.getElementById('txList');l.hidden=!l.hidden;this.textContent=l.hidden?'عرض العمليات':'إخفاء العمليات'};
 document.getElementById('clearTx').onclick=function(){var btn=this;armButton(btn,'متأكد؟ اضغط مرة ثانية',function(){
   delete btn.dataset.armed;btn.textContent='مسح عمليات الشهر';btn.classList.remove('arm');
@@ -440,16 +438,26 @@ document.getElementById('parseBtn').onclick=function(){
     if(/رمز|otp|code|كلمة المرور|verification/i.test(b)&&!/شراء|purchase/i.test(b)){skip++;return}
     var a=findAmount(b);if(!a||!(a.amt>0)){skip++;return}
     var id=hash(b);if(have[id]){dup++;return}
-    var d=findDate(b),income=isIncome(b),merchant=income&&isSalary(b)?'راتب':findMerchant(b);
+    var d=findDate(b),income=isIncome(b),bud=parseFloat(MONTHS[cur].budget)||0;
+    var salary=income&&(isSalary(b)||(bud>=3000&&a.amt>=bud*0.8));
+    var merchant=salary?'راتب':findMerchant(b);
     if(income&&/^\d+$/.test(merchant))merchant=b.split('\n')[0].slice(0,60);
-    if(income&&isSalary(b)&&d.date&&!MONTHS[cur].salaryDate)sal=d.date;
-    TX.push({id:id,date:d.date,time:d.time,amt:a.amt,cur:a.cur,merchant:merchant,kind:income?'in':'out',cat:income?'':guessCat(merchant,b),mid:d.date?'':MONTHS[cur].id});
+    var kind=income?'in':'out',cat=income?'':guessCat(merchant,b),isTr=/تحويل|حوالة|حواله|transfer|سداد/i.test(b)||cat==='تحويلات';
+    var twin=isTr&&TX.find(function(t){
+      if(t.kind!==kind||Math.abs(t.amt-a.amt)>0.001||t.cur!==a.cur||!t.tr)return false;
+      if(t.date&&d.date&&t.date!==d.date)return false;
+      if(t.time&&d.time){var m1=+t.time.slice(0,2)*60+ +t.time.slice(3),m2=+d.time.slice(0,2)*60+ +d.time.slice(3);if(Math.abs(m1-m2)>120)return false}
+      return true});
+    if(twin){if(/^[\d*\s-]+$|^(حوالة|تحويل|طلب|رقم)/.test(twin.merchant)&&!/^[\d*\s-]+$/.test(merchant)){twin.merchant=merchant;twin.cat=cat||twin.cat}
+      if(!twin.date&&d.date){twin.date=d.date;twin.time=d.time;twin.mid=''}
+      have[id]=1;dup++;return}
+    if(salary&&d.date)sal=d.date;
+    TX.push({id:id,date:d.date,time:d.time,amt:a.amt,cur:a.cur,merchant:merchant,kind:kind,cat:cat,salary:salary,tr:isTr,mid:d.date?'':MONTHS[cur].id});
     have[id]=1;added++;if(income)inc++;
   });
-  if(sal)MONTHS[cur].salaryDate=sal;
   save();ta.value='';
-  var msg='أضفت '+added+' عملية';if(inc)msg+=' (منها '+inc+' دخل)';if(dup)msg+='، و'+dup+' مكررة تجاهلتها';if(skip)msg+='، و'+skip+' رسالة ما فيها مبلغ';
-  if(sal)msg+='. وحددت تاريخ الراتب '+fmtDate(sal);
+  var msg='أضفت '+added+' عملية';if(inc)msg+=' (منها '+inc+' دخل)';if(dup)msg+='، و'+dup+' مكررة ما حسبتها مرتين';if(skip)msg+='، و'+skip+' رسالة ما فيها مبلغ';
+  if(sal)msg+='. ولقيت الراتب نازل '+fmtDate(sal);
   var outside=txOfMonth(cur).length;if(added&&!outside)msg+='. تواريخ العمليات خارج فترة هالشهر، غيّر الشهر أو تاريخ الراتب';
   document.getElementById('parseMsg').textContent=msg+'.';
   renderSpend();

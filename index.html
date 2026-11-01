@@ -84,6 +84,11 @@ h2{font-size:17px;margin:0 0 4px}
 .grp .gs{font-size:12px;color:var(--muted)}
 .ok{color:var(--ok)}.warnc{color:var(--danger)}
 .tx select+select{grid-column:1/2}
+.seg{display:grid;grid-template-columns:1fr 1fr;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px}
+.segb{background:transparent;border:0;border-radius:9px;padding:10px 8px;font-family:inherit;font-size:15px;color:var(--muted);cursor:pointer}
+.segb.on{background:var(--accent);color:var(--on-accent);font-weight:600}
+.view{display:flex;flex-direction:column;gap:12px}
+.view[hidden]{display:none!important}
 .toggle{background:transparent;border:0;color:var(--accent);font-family:inherit;font-size:13px;cursor:pointer;padding:6px 0}
 .bar{height:10px;background:var(--inset);border-radius:99px;overflow:hidden;border:1px solid var(--line);margin-top:12px}
 .bar>i{display:block;height:100%;background:var(--accent);transition:width .2s}
@@ -108,75 +113,87 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
 </head><body>
 
 <div class="wrap" dir="rtl" lang="ar">
-  <div>
-    <h1>التزاماتي</h1>
-    <div class="sub">اكتب ميزانيتك والتزاماتك الشهرية، وعلّم على اللي دفعته. بياناتك تنحفظ على جهازك أنت فقط.</div>
+  <h1>التزاماتي</h1>
+
+  <div class="seg" role="tablist">
+    <button class="segb on" id="navMain" role="tab">الالتزامات</button>
+    <button class="segb" id="navSpend" role="tab">وين راحت فلوسي</button>
   </div>
 
   <div class="tabs" id="tabs"></div>
 
-  <div class="card">
-    <label class="field" for="budget">الميزانية الكلية للشهر</label>
-    <input class="budget" id="budget" type="number" inputmode="decimal" placeholder="اكتب ميزانيتك هنا">
-    <div class="stats">
-      <div class="stat"><div class="lbl">المتبقي من الميزانية</div><div class="val" id="left">0</div></div>
-      <div class="stat"><div class="lbl">إجمالي الالتزامات</div><div class="val" id="total">0</div></div>
+  <div id="viewMain" class="view">
+    <div class="card">
+      <label class="field" for="budget">الميزانية الكلية للشهر</label>
+      <input class="budget" id="budget" type="number" inputmode="decimal" placeholder="اكتب ميزانيتك هنا">
+      <div class="stats">
+        <div class="stat"><div class="lbl">المتبقي من الميزانية</div><div class="val" id="left">0</div></div>
+        <div class="stat"><div class="lbl">إجمالي الالتزامات</div><div class="val" id="total">0</div></div>
+      </div>
+      <div class="bar"><i id="bar" style="width:0%"></i></div>
+      <div class="tip" id="tip"></div>
     </div>
-    <div class="bar"><i id="bar" style="width:0%"></i></div>
-    <div class="tip" id="tip"></div>
-    <div class="check">
+
+    <div class="card" id="list"></div>
+
+    <div class="actions">
+      <button class="btn" id="add">+ بند جديد</button>
+      <button class="btn ghost" id="copy">نسخة نصية</button>
+      <button class="btn ghost" id="reset">تصفير الشهر</button>
+    </div>
+  </div>
+
+  <div id="viewSpend" class="view" hidden>
+    <div class="card">
       <label class="field" for="actual">كم باقي معك فعلياً الحين؟</label>
       <input class="budget" id="actual" type="number" inputmode="decimal" placeholder="اكتب الرصيد اللي معك">
       <div class="stats" id="checkStats" hidden>
         <div class="stat"><div class="lbl">المفروض يكون معك</div><div class="val" id="expected">0</div></div>
         <div class="stat"><div class="lbl" id="outLbl">صرفته خارج الحسبة</div><div class="val" id="outside">0</div></div>
       </div>
-      <div class="note" id="checkNote">المفروض = الميزانية ناقص البنود اللي علّمت عليها إنها مدفوعة.</div>
+      <div class="note" id="checkNote">المفروض = الميزانية ناقص الالتزامات اللي علّمتها مدفوعة.</div>
     </div>
-  </div>
 
-  <div class="card" id="list"></div>
-
-  <div class="card actions">
-    <button class="btn" id="add">+ بند جديد</button>
-    <button class="btn ghost" id="copy">نسخة نصية</button>
-    <button class="btn ghost" id="backup">نسخ احتياطي</button>
-    <button class="btn ghost" id="restoreBtn">استرجاع نسخة</button>
-    <button class="btn ghost" id="reset">تصفير الشهر</button>
-  </div>
-
-  <div class="card" id="spend">
-    <h2>وين راحت فلوسي</h2>
-    <div class="sub">انسخ رسايل البنك من تطبيق الرسايل والصقها هنا. التحليل يصير على جوالك، وما تطلع الرسايل منه.</div>
-    <label class="field" for="smsText" style="margin-top:12px">رسايل البنك</label>
-    <textarea class="sms" id="smsText" placeholder="الصق رسالة أو أكثر هنا"></textarea>
-    <div class="actions" style="margin-top:8px">
-      <button class="btn" id="parseBtn">حلّل الرسايل</button>
-      <button class="btn ghost" id="clearTx">مسح عمليات الشهر</button>
-    </div>
-    <div class="msg" id="parseMsg"></div>
-    <div class="note" id="rangeNote"></div>
-    <div id="spendOut" hidden>
-      <div class="stats">
-        <div class="stat"><div class="lbl">دفعته للالتزامات</div><div class="val" id="spCommit">0</div></div>
-        <div class="stat"><div class="lbl">خارج الالتزامات</div><div class="val neg" id="spOut">0</div></div>
+    <div class="card" id="spend">
+      <h2>رسايل البنك</h2>
+      <div class="sub">انسخ رسايل البنك من يوم الراتب والصقها هنا. التحليل يصير على جوالك، وما تطلع الرسايل منه.</div>
+      <textarea class="sms" id="smsText" placeholder="الصق الرسايل هنا" aria-label="رسايل البنك" style="margin-top:10px"></textarea>
+      <div class="actions" style="margin-top:8px">
+        <button class="btn" id="parseBtn">حلّل الرسايل</button>
+        <button class="btn ghost" id="clearTx">مسح عمليات الشهر</button>
       </div>
-      <div class="recon" id="recon" hidden></div>
-      <div id="secAsk"></div>
-      <div id="secOut"></div>
-      <div id="secCommit"></div>
-      <div id="secIn"></div>
+      <div class="msg" id="parseMsg"></div>
+      <div class="note" id="rangeNote"></div>
+      <div id="spendOut" hidden>
+        <div class="stats">
+          <div class="stat"><div class="lbl">دفعته للالتزامات</div><div class="val" id="spCommit">0</div></div>
+          <div class="stat"><div class="lbl">خارج الالتزامات</div><div class="val neg" id="spOut">0</div></div>
+        </div>
+        <div class="recon" id="recon" hidden></div>
+        <div id="secAsk"></div>
+        <div id="secOut"></div>
+        <div id="secCommit"></div>
+        <div id="secIn"></div>
+      </div>
     </div>
-  </div>
 
-  <div class="card" id="restorePanel" hidden>
-    <label class="field" for="restoreText">الصق النسخة الاحتياطية هنا</label>
-    <textarea id="restoreText" placeholder='{"months":[...]}'></textarea>
-    <div class="actions" style="margin-top:8px">
-      <button class="btn" id="restoreApply">استرجاع</button>
-      <button class="btn ghost" id="restoreCancel">إلغاء</button>
+    <div class="card">
+      <h2>نسخة احتياطية</h2>
+      <div class="sub">انقل بياناتك لجوال ثاني أو احفظها عندك.</div>
+      <div class="actions" style="margin-top:10px">
+        <button class="btn ghost" id="backup">نسخ احتياطي</button>
+        <button class="btn ghost" id="restoreBtn">استرجاع نسخة</button>
+      </div>
+      <div id="restorePanel" hidden style="margin-top:10px">
+        <label class="field" for="restoreText">الصق النسخة الاحتياطية هنا</label>
+        <textarea id="restoreText" placeholder='{"months":[...]}'></textarea>
+        <div class="actions" style="margin-top:8px">
+          <button class="btn" id="restoreApply">استرجاع</button>
+          <button class="btn ghost" id="restoreCancel">إلغاء</button>
+        </div>
+        <div class="msg" id="restoreMsg"></div>
+      </div>
     </div>
-    <div class="msg" id="restoreMsg"></div>
   </div>
 </div>
 
@@ -288,6 +305,7 @@ function copyText(txt,btn,okLabel){
   fallback();
 }
 function showPanel(text,msg){
+  if(typeof setView==='function'&&VIEW!=='spend')setView('spend');
   var p=document.getElementById('restorePanel');p.hidden=false;
   var t=document.getElementById('restoreText');t.value=text||'';document.getElementById('restoreMsg').textContent=msg||'';
   if(text){t.focus();t.select()}
@@ -574,7 +592,14 @@ document.getElementById('parseBtn').onclick=function(){
   renderSpend();render();
 };
 
+var VIEW='main';
+function setView(v){VIEW=v;document.getElementById('viewMain').hidden=v!=='main';document.getElementById('viewSpend').hidden=v!=='spend';
+  document.getElementById('navMain').classList.toggle('on',v==='main');document.getElementById('navSpend').classList.toggle('on',v==='spend');
+  try{localStorage.setItem(KEY+'-view',v)}catch(e){}window.scrollTo(0,0)}
+document.getElementById('navMain').onclick=function(){setView('main')};
+document.getElementById('navSpend').onclick=function(){setView('spend')};
 load();renderAll();
+try{var sv=localStorage.getItem(KEY+'-view');if(sv==='spend')setView('spend')}catch(e){}
 if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){})})}
 </script>
 </body></html>

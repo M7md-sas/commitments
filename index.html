@@ -48,6 +48,10 @@ h1{font-size:22px;margin:0;text-wrap:balance}
 .lbl{font-size:12px;color:var(--muted)}
 .val{font-size:21px;font-weight:700;margin-top:2px;font-variant-numeric:tabular-nums}
 .val.neg{color:var(--danger)}
+.val.pos{color:var(--ok)}
+.check{margin-top:12px;padding-top:12px;border-top:1px dashed var(--line)}
+.check .stats{margin-top:10px}
+.note{font-size:12px;color:var(--muted);margin-top:8px}
 .bar{height:10px;background:var(--inset);border-radius:99px;overflow:hidden;border:1px solid var(--line);margin-top:12px}
 .bar>i{display:block;height:100%;background:var(--accent);transition:width .2s}
 .field{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
@@ -87,6 +91,15 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
     </div>
     <div class="bar"><i id="bar" style="width:0%"></i></div>
     <div class="tip" id="tip"></div>
+    <div class="check">
+      <label class="field" for="actual">كم باقي معك فعلياً الحين؟</label>
+      <input class="budget" id="actual" type="number" inputmode="decimal" placeholder="اكتب الرصيد اللي معك">
+      <div class="stats" id="checkStats" hidden>
+        <div class="stat"><div class="lbl">المفروض يكون معك</div><div class="val" id="expected">0</div></div>
+        <div class="stat"><div class="lbl" id="outLbl">صرفته خارج الحسبة</div><div class="val" id="outside">0</div></div>
+      </div>
+      <div class="note" id="checkNote">المفروض = الميزانية ناقص البنود اللي علّمت عليها إنها مدفوعة.</div>
+    </div>
   </div>
 
   <div class="card" id="list"></div>
@@ -127,7 +140,7 @@ function fmt(n){return Number(n||0).toLocaleString('en-US',{maximumFractionDigit
 function save(){try{localStorage.setItem(KEY,JSON.stringify({months:MONTHS,cur:cur}))}catch(e){}}
 function clean(ms){
   return ms.map(function(m){
-    return {id:m.id||('m'+Date.now()+Math.random()),y:m.y,m:m.m,name:m.name||'شهر',budget:m.budget||'',
+    return {id:m.id||('m'+Date.now()+Math.random()),y:m.y,m:m.m,name:m.name||'شهر',budget:m.budget||'',actual:m.actual==null?'':m.actual,
       items:(m.items||[]).map(function(it){return Array.isArray(it)?{name:it[0]||'',amt:Number(it[1])||0,done:!!it[2]}:{name:it.name||'',amt:Number(it.amt)||0,done:!!it.done,hint:it.hint}})};
   });
 }
@@ -148,6 +161,14 @@ function calc(){
   document.getElementById('total').textContent=fmt(t);
   var L=document.getElementById('left');L.textContent=fmt(left);L.className='val'+(left<0?' neg':'');
   document.getElementById('bar').style.width=(bud>0?Math.max(0,Math.min(100,t/bud*100)):0)+'%';
+  var expected=bud-done,act=m.actual,cs=document.getElementById('checkStats');
+  if(act===''||act==null||!bud){cs.hidden=true}else{
+    cs.hidden=false;var a=parseFloat(act)||0,out=expected-a;
+    document.getElementById('expected').textContent=fmt(expected);
+    var O=document.getElementById('outside'),OL=document.getElementById('outLbl');
+    if(out>=0){OL.textContent='صرفته خارج الحسبة';O.textContent=fmt(out);O.className='val'+(out>0?' neg':'')}
+    else{OL.textContent='زيادة عن المتوقع';O.textContent=fmt(-out);O.className='val pos'}
+  }
   document.getElementById('tip').textContent=m.items.length?('دفعت '+cnt+' من '+m.items.length+' بنود بقيمة '+fmt(done)+'، والباقي '+fmt(t-done)):'';
 }
 
@@ -176,6 +197,7 @@ function renderTabs(){
 function render(){
   var m=MONTHS[cur];
   document.getElementById('budget').value=m.budget||'';
+  document.getElementById('actual').value=(m.actual==null)?'':m.actual;
   var list=document.getElementById('list');list.innerHTML='';
   if(!m.items.length){var e=document.createElement('div');e.className='empty';e.textContent='ما فيه بنود. اضغط "+ بند جديد" وأضف أول التزام.';list.appendChild(e)}
   m.items.forEach(function(it,i){
@@ -211,12 +233,13 @@ function showPanel(text,msg){
   if(text){t.focus();t.select()}
 }
 
+document.getElementById('actual').addEventListener('input',function(){MONTHS[cur].actual=this.value;save();calc()});
 document.getElementById('budget').addEventListener('input',function(){MONTHS[cur].budget=this.value;save();calc()});
 document.getElementById('add').onclick=function(){MONTHS[cur].items.push({name:'',amt:0,done:false});save();render();
   var ins=document.querySelectorAll('#list .name');if(ins.length)ins[ins.length-1].focus()};
 document.getElementById('reset').onclick=function(){var btn=this;armButton(btn,'متأكد؟ اضغط مرة ثانية',function(){
   delete btn.dataset.armed;btn.textContent='تصفير الشهر';btn.classList.remove('arm');
-  MONTHS[cur].items=[];MONTHS[cur].budget='';save();render()})};
+  MONTHS[cur].items=[];MONTHS[cur].budget='';MONTHS[cur].actual='';save();render()})};
 document.getElementById('copy').onclick=function(){
   var m=MONTHS[cur],items=m.items.filter(function(it){return it.name||it.amt});
   var tot=items.reduce(function(s,it){return s+(Number(it.amt)||0)},0);

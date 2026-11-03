@@ -89,6 +89,15 @@ h2{font-size:17px;margin:0 0 4px}
 .segb.on{background:var(--accent);color:var(--on-accent);font-weight:600}
 .view{display:flex;flex-direction:column;gap:12px}
 .view[hidden]{display:none!important}
+.ovl{position:fixed;inset:0;background:rgba(10,12,20,.55);display:flex;align-items:center;justify-content:center;z-index:50;
+  padding:calc(16px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.ovl[hidden]{display:none!important}
+.dlg{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px;width:100%;max-width:420px;max-height:100%;overflow:auto}
+.dlg h2{font-size:19px;margin:0}
+.dlg .ver{color:var(--muted);font-size:13px;margin:2px 0 12px}
+.dlg ul{margin:0;padding:0 18px 0 0;display:flex;flex-direction:column;gap:8px;font-size:14px}
+.dlg .actions{margin-top:16px}
+.dlg .actions .btn{flex:1}
 .toggle{background:transparent;border:0;color:var(--accent);font-family:inherit;font-size:13px;cursor:pointer;padding:6px 0}
 .bar{height:10px;background:var(--inset);border-radius:99px;overflow:hidden;border:1px solid var(--line);margin-top:12px}
 .bar>i{display:block;height:100%;background:var(--accent);transition:width .2s}
@@ -198,6 +207,19 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
   </div>
 </div>
 
+<div class="ovl" id="whatsNew" hidden role="dialog" aria-modal="true" aria-labelledby="wnTitle" dir="rtl" lang="ar">
+  <div class="dlg">
+    <h2 id="wnTitle">ما الجديد</h2>
+    <div class="ver" id="wnVer"></div>
+    <ul id="wnList"></ul>
+    <div class="actions">
+      <button class="btn" id="wnClose">إغلاق</button>
+      <button class="btn ghost" id="wnNever">عدم الإظهار مرة أخرى</button>
+    </div>
+  </div>
+</div>
+
+<script src="updates.js"></script>
 <script>
 var KEY='commitments-share-v1';
 var AR_MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -658,5 +680,27 @@ document.getElementById('navSpend').onclick=function(){setView('spend')};
 load();renderAll();
 try{var sv=localStorage.getItem(KEY+'-view');if(sv==='spend')setView('spend')}catch(e){}
 if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){})})}
+
+/* ===== ما الجديد ===== */
+(function(){
+  var U=(window.APP_UPDATES||[])[0];if(!U)return;
+  var K=KEY+'-updates',st={};
+  try{st=JSON.parse(localStorage.getItem(K)||'{}')||{}}catch(e){}
+  var isNew=!st.firstSeen;
+  if(isNew){st.firstSeen=U.version;try{localStorage.setItem(K,JSON.stringify(st))}catch(e){}}
+  if(isNew&&!U.showToNew)return;
+  if((st.dismissed||[]).indexOf(U.version)>-1)return;
+  try{if(sessionStorage.getItem(K+'-closed')===U.version)return}catch(e){}
+  document.getElementById('wnVer').textContent='الإصدار '+U.version+' · '+U.date;
+  var ul=document.getElementById('wnList');
+  U.items.forEach(function(it){var li=document.createElement('li');
+    if(it[0]){var b=document.createElement('b');b.textContent=it[0]+': ';li.appendChild(b)}
+    li.appendChild(document.createTextNode(it[1]));ul.appendChild(li)});
+  var ov=document.getElementById('whatsNew');ov.hidden=false;
+  function close(){ov.hidden=true}
+  document.getElementById('wnClose').onclick=function(){try{sessionStorage.setItem(K+'-closed',U.version)}catch(e){}close()};
+  document.getElementById('wnNever').onclick=function(){st.dismissed=(st.dismissed||[]).concat(U.version);try{localStorage.setItem(K,JSON.stringify(st))}catch(e){}close()};
+  ov.addEventListener('click',function(e){if(e.target===ov)document.getElementById('wnClose').click()});
+})();
 </script>
 </body></html>

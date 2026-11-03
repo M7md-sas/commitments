@@ -139,6 +139,7 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
     <div class="actions">
       <button class="btn" id="add">+ بند جديد</button>
       <button class="btn ghost" id="copy">نسخ كنص</button>
+      <button class="btn ghost" id="pdfBtn">تصدير PDF</button>
       <button class="btn ghost" id="reset">إعادة تعيين الشهر</button>
     </div>
   </div>
@@ -590,6 +591,62 @@ document.getElementById('parseBtn').onclick=function(){
   var inRange=txOfMonth(cur).length;if(added&&!inRange)msg+='. تواريخ العمليات خارج فترة هذا الشهر، اختر شهراً آخر';
   document.getElementById('parseMsg').textContent=msg+'.';
   renderSpend();render();
+};
+
+/* ===== تصدير PDF ===== */
+function loadScript(src){return new Promise(function(res,rej){var e=document.createElement('script');e.src=src;e.onload=res;e.onerror=rej;document.head.appendChild(e)})}
+function esc(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function buildReport(){
+  var m=MONTHS[cur],items=m.items.filter(function(it){return (it.name||'').trim()||it.amt});
+  var tot=items.reduce(function(s,it){return s+(Number(it.amt)||0)},0),paid=items.reduce(function(s,it){return s+(it.done?(Number(it.amt)||0):0)},0);
+  var bud=parseFloat(m.budget)||0,now=new Date();
+  var d=now.getDate()+'/'+(now.getMonth()+1)+'/'+now.getFullYear();
+  var rows=items.map(function(it,i){return '<tr><td class="n">'+(i+1)+'</td><td>'+esc(it.name||'—')+'</td><td class="a">'+fmt(it.amt)+'</td><td class="s '+(it.done?'p':'u')+'">'+(it.done?'مدفوع':'غير مدفوع')+'</td></tr>'}).join('');
+  var el=document.createElement('div');el.id='pdfReport';el.dir='rtl';
+  el.innerHTML='<style>#pdfReport{position:fixed;top:0;left:-10000px;width:794px;padding:48px 56px;background:#fff;color:#171a21;font-family:system-ui,"Segoe UI",Tahoma,Arial,sans-serif;font-size:15px;line-height:1.6;box-sizing:border-box}'+
+  '#pdfReport h1{font-size:26px;margin:0;color:#4338ca}#pdfReport .sub{color:#646c80;font-size:13px;margin:2px 0 22px}'+
+  '#pdfReport .sum{display:flex;gap:12px;margin-bottom:22px}#pdfReport .box{flex:1;border:1px solid #e1e4ec;border-radius:10px;padding:10px 14px;background:#f7f8fb}'+
+  '#pdfReport .box div{font-size:12px;color:#646c80}#pdfReport .box b{font-size:20px;display:block;margin-top:2px}'+
+  '#pdfReport table{width:100%;border-collapse:collapse}#pdfReport th{background:#4338ca;color:#fff;font-weight:600;font-size:13px;padding:9px 10px;text-align:right}'+
+  '#pdfReport td{padding:9px 10px;border-bottom:1px solid #e9ebf1}#pdfReport tr:nth-child(even) td{background:#fafbfd}'+
+  '#pdfReport .n{width:36px;color:#646c80}#pdfReport .a{text-align:left;font-weight:600;width:110px}#pdfReport .s{width:100px;font-size:13px}'+
+  '#pdfReport .p{color:#15803d}#pdfReport .u{color:#b91c1c}#pdfReport tfoot td{font-weight:700;border-top:2px solid #4338ca;border-bottom:0;background:#fff!important}'+
+  '#pdfReport .foot{margin-top:26px;font-size:11px;color:#8b93a7;text-align:center}</style>'+
+  '<h1>التزاماتي</h1><div class="sub">تقرير الالتزامات · '+esc(m.name)+' · تاريخ الإصدار '+d+'</div>'+
+  '<div class="sum"><div class="box"><div>الميزانية</div><b>'+fmt(bud)+'</b></div><div class="box"><div>إجمالي الالتزامات</div><b>'+fmt(tot)+'</b></div>'+
+  '<div class="box"><div>المدفوع</div><b>'+fmt(paid)+'</b></div><div class="box"><div>المتبقي من الميزانية</div><b>'+fmt(bud-tot)+'</b></div></div>'+
+  '<table><thead><tr><th>#</th><th>البند</th><th style="text-align:left">المبلغ (ريال)</th><th>الحالة</th></tr></thead><tbody>'+rows+'</tbody>'+
+  '<tfoot><tr><td></td><td>الإجمالي</td><td class="a">'+fmt(tot)+'</td><td></td></tr></tfoot></table>'+
+  '<div class="foot">صادر من تطبيق التزاماتي</div>';
+  document.body.appendChild(el);return el;
+}
+document.getElementById('pdfBtn').onclick=function(){
+  var btn=this,orig=btn.textContent;if(btn.dataset.busy)return;btn.dataset.busy='1';btn.textContent='جارٍ التصدير…';
+  function done(t){btn.textContent=t||orig;delete btn.dataset.busy;if(t)setTimeout(function(){btn.textContent=orig},2000)}
+  var ready=window.jspdf&&window.html2canvas?Promise.resolve():Promise.all([
+    loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'),
+    loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js')]);
+  ready.then(function(){
+    var el=buildReport();
+    return html2canvas(el,{scale:2,backgroundColor:'#ffffff'}).then(function(cv){
+      el.remove();
+      var pdf=new window.jspdf.jsPDF({unit:'pt',format:'a4'}),pw=pdf.internal.pageSize.getWidth(),ph=pdf.internal.pageSize.getHeight();
+      var pagePx=Math.floor(cv.width*ph/pw),y=0,first=true;
+      while(y<cv.height){
+        var h=Math.min(pagePx,cv.height-y),pc=document.createElement('canvas');pc.width=cv.width;pc.height=h;
+        var cx=pc.getContext('2d');cx.fillStyle='#fff';cx.fillRect(0,0,pc.width,h);cx.drawImage(cv,0,y,cv.width,h,0,0,cv.width,h);
+        if(!first)pdf.addPage();first=false;
+        pdf.addImage(pc.toDataURL('image/jpeg',0.92),'JPEG',0,0,pw,h*pw/cv.width);y+=h;
+      }
+      var name='التزاماتي - '+MONTHS[cur].name+'.pdf',blob=pdf.output('blob'),file;
+      try{file=new File([blob],name,{type:'application/pdf'})}catch(e){}
+      if(file&&navigator.canShare&&navigator.canShare({files:[file]})){
+        return navigator.share({files:[file],title:name}).then(function(){done('تم ✓')},function(){done()});
+      }
+      var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();
+      setTimeout(function(){URL.revokeObjectURL(a.href)},5000);done('تم التنزيل ✓');
+    });
+  }).catch(function(){var r=document.getElementById('pdfReport');if(r)r.remove();done('تعذّر التصدير، تحقق من الاتصال')});
 };
 
 var VIEW='main';

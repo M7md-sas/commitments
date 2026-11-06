@@ -126,7 +126,7 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
 
   <div class="seg" role="tablist">
     <button class="segb on" id="navMain" role="tab">الالتزامات</button>
-    <button class="segb" id="navSpend" role="tab">تحليل المصروفات</button>
+    <button class="segb" id="navSpend" role="tab">الرصيد</button>
   </div>
 
   <div class="tabs" id="tabs"></div>
@@ -164,7 +164,7 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
       <div class="note" id="checkNote">الرصيد المتوقع = الميزانية − الالتزامات المدفوعة.</div>
     </div>
 
-    <div class="card" id="spend">
+    <div class="card" id="spend" hidden>
       <h2>الرسائل البنكية</h2>
       <div class="sub">الصق الرسائل البنكية منذ تاريخ إيداع الراتب. تتم المعالجة على الجهاز فقط، ولا تُرسل الرسائل إلى أي جهة.</div>
       <textarea class="sms" id="smsText" placeholder="الصق الرسائل هنا" aria-label="الرسائل البنكية" style="margin-top:10px"></textarea>
@@ -340,7 +340,9 @@ function addAfter(it){
   if(!(nx&&!(nx.name||'').trim()&&!nx.amt)){nx={id:iid(),name:'',amt:0,done:false};m.items.splice(idx+1,0,nx);save();render()}
   var el=document.getElementById('name-'+cur+'-'+m.items.indexOf(nx));if(el)el.focus();
 }
-function renderAll(){renderTabs();renderSpend();render()}
+/* تحليل الرسائل البنكية موقوف مؤقتاً. لإرجاعه: اجعل القيمة true */
+var FEATURE_SMS=false;
+function renderAll(){renderTabs();if(FEATURE_SMS)renderSpend();render()}
 
 function copyText(txt,btn,okLabel){
   var orig=btn.textContent;
